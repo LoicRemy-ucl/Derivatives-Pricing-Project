@@ -3,7 +3,77 @@ title: "Derivatives Pricing"
 format: html
 ---
 
+```{python}
+# import libraries
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+import math
+```
+
 
 ```{python}
-
+# Project defined parameters
+S0 = 150  # Initial stock price
+K = 150  # Strike price
+T = 1  # Time to maturity in years
+m = 12  # Number of fixing dates
+sigma = 0.3  # Volatility
+r = 0.04  # Risk-free rate
 ```
+
+# Question 1: Pricing
+## 1.1: Option Pricing using MCS
+
+```{python}
+# Define Parameters
+n = 1000000 # Number of simulations
+delta = T / m # Time increment (monthly)
+
+# Ensure reproduceability
+np.random.seed(42)
+
+# Asset Price Simulation
+S_paths = np.zeros((n, m + 1)) # initilize paths
+S_paths[:, 0] = S0  # define t0 with s0
+for i in range(1, (m+1)): # iterativly simulate n asset price paths over m periods
+    S_paths[:, i] = S_paths[:, (i-1)] * np.exp(-.5 * sigma**2 * delta + sigma * np.sqrt(delta) * np.random.standard_normal(n))
+
+## Geometric Asian Option
+path_avgs = np.exp(np.mean(np.log(S_paths_asian), axis=1)) # compute geom. avg. 
+psi_asian = np.maximum(path_avgs-K,0) # compute payoffs
+p_asian = np.exp(-r*T) * np.mean(psi_asian) # compute price of the asian option
+```
+
+## 1.2: Price Comparison of European vs. Asian Call Option
+```{python}
+## European Option
+np.random.seed(42) # to ensure reproduceability
+Z = np.random.standard_normal(n) 
+path_terminal = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z) # terminal prices
+psi_euro = np.maximum(path_terminal-K,0) # compute payoffs
+p_euro = np.exp(-r*T) * np.mean(psi_euro)
+```
+
+```{python}
+print(p_euro)
+```
+## 1.3: Pricing of Options with Barriers
+### i. "Up-In" Barrier
+### ii. "Up-Out" Barrier
+
+# Question 2: Analytical Pricing
+## 2.1: Analytical Option Pricing
+## 2.2: Quantitative Parameter Impact Analysis
+### i. Time-To-Maturity
+### ii. Strike Values
+### iii. Volatility of the Underlying
+### iv. Number of Fixing Dates
+### v. Price of the Underlying 
+## 2.3: Analytical Pricing of Options with Barriers
+### i. "Up-In" Barrier
+### ii. "Up-Out" Barrier
+
+ # Question 3: Replication
+## 3.1: Replication Strategy
+## 3.2: Assessing Impact of the Rebalancing Errors
