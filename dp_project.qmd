@@ -1,6 +1,6 @@
 ---
 title: "Derivatives Pricing"
-format: html
+format: pdf
 ---
 
 ```{python}
