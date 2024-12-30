@@ -4,6 +4,7 @@ format: html
 ---
 
 ```{python}
+#| echo: false
 # import libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ import math
 
 
 ```{python}
+#| echo: false
 # Project defined parameters
 S0 = 150  # Initial stock price
 K = 150  # Strike price
@@ -24,8 +26,12 @@ r = 0.04  # Risk-free rate
 
 # Question 1: Pricing
 ## 1.1: Option Pricing using MCS
+```
+
+```
 
 ```{python}
+#| echo: false
 # Define Parameters
 n = 1000000 # Number of simulations
 delta = T / m # Time increment (monthly)
@@ -40,13 +46,14 @@ for i in range(1, (m+1)): # iterativly simulate n asset price paths over m perio
     S_paths[:, i] = S_paths[:, (i-1)] * np.exp(-.5 * sigma**2 * delta + sigma * np.sqrt(delta) * np.random.standard_normal(n))
 
 ## Geometric Asian Option
-path_avgs = np.exp(np.mean(np.log(S_paths_asian), axis=1)) # compute geom. avg. 
+path_avgs = np.exp(np.mean(np.log(S_paths), axis=1)) # compute geom. avg. 
 psi_asian = np.maximum(path_avgs-K,0) # compute payoffs
 p_asian = np.exp(-r*T) * np.mean(psi_asian) # compute price of the asian option
 ```
 
 ## 1.2: Price Comparison of European vs. Asian Call Option
 ```{python}
+#| echo: false
 ## European Option
 np.random.seed(42) # to ensure reproduceability
 Z = np.random.standard_normal(n) 
@@ -55,8 +62,8 @@ psi_euro = np.maximum(path_terminal-K,0) # compute payoffs
 p_euro = np.exp(-r*T) * np.mean(psi_euro)
 ```
 
-```{python}
-print(p_euro)
+```
+This is the price of the European option: `{python} p_euro`
 ```
 ## 1.3: Pricing of Options with Barriers
 ### i. "Up-In" Barrier
