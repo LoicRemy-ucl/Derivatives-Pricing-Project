@@ -34,6 +34,35 @@ ul.task-list li input[type="checkbox"] {
 <link href="dp_project_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="dp_project_files/libs/bootstrap/bootstrap-973236bd072d72a04ee9cd82dcc9cb29.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -65,7 +94,25 @@ ul.task-list li input[type="checkbox"] {
 <section id="question-1-pricing" class="level1">
 <h1>Question 1: Pricing</h1>
 <section id="option-pricing-using-mcs" class="level2">
-<h2 class="anchored" data-anchor-id="option-pricing-using-mcs">1.1: Option Pricing using MCS</h2>
+<h2 class="anchored" data-anchor-id="option-pricing-using-mcs">1.1: Option Pricing Using MCS</h2>
+<section id="pricing-options" class="level3">
+<h3 class="anchored" data-anchor-id="pricing-options">Pricing Options</h3>
+<p>An option is a financial derivative, essentially a contract that gives the buyer the right, but not the obligation, to sell or buy an asset at a pre-determined price on or before a specific date. Generally, there are two classes of options: calls, which give the buyer the right to purchase, and puts, which give the buyer the right to sell.</p>
+<p>Factors such as the price and volatility of the underlying asset, the time until the contract expiration, the strike price of the option, and the risk-free interest rate influence the value of an option. These factors are utilized in option pricing models to determine the theoretical option price.</p>
+</section>
+<section id="geometric-asian-call-options" class="level3">
+<h3 class="anchored" data-anchor-id="geometric-asian-call-options">Geometric Asian Call Options</h3>
+<p>There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry (<span class="math inline">\(\psi_{T}\)</span>) is computed as the maximum of the difference between the geometric average price of the underlying asset and the strike price or There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry (<span class="math inline">\(\psi_{T}\)</span>) is determined by the geometric average of the price of the underlying asset (<span class="math inline">\(A_{t}\)</span>). The payoff of the option will be positive if the average exceeds the strike price, or will be 0 otherwise. The payoff at expiry (<span class="math inline">\(\psi_{T}\)</span>) can be expressed as: <span class="math display">\[\psi_{T}=(A_{t}-K)^{+}, \]</span>where the geometric average price (<span class="math inline">\(A_{t}\)</span>) is determined as, <span class="math display">\[ A_{t}=\sqrt[m]{\prod^{m}_{i=1}{S_{T_{i}}}}\]</span></p>
+</section>
+<section id="monte-carlo-simulations" class="level3">
+<h3 class="anchored" data-anchor-id="monte-carlo-simulations">Monte Carlo Simulations</h3>
+<p>Monte Carlo simulations (MCS) are versatile computational techniques used in estimating the outcomes of several random variables. In MCS, a large number of scenarios are drawn from specified probability distributions.</p>
+<p>The principle of MCS is based on the law of large numbers, assuming that the average results obtained from a large number of trials should approximate the expected value of the random variable being simulated. The approachis quite powerful for the investigation and quantification of the intrinsic uncertainty of systems and processes through multiple scenario modeling and observation of resulting outcomes.</p>
+</section>
+<section id="mcs-in-pricing-derivatives" class="level3">
+<h3 class="anchored" data-anchor-id="mcs-in-pricing-derivatives">MCS in Pricing Derivatives</h3>
+<p>MCS becomes particularly useful in prices of financial derivatives, which can be complicated due to various parameters, variables, and sources of uncertainty. Traditional pricing models can have limitiations in their fit with the wide range of derivatives due to the explicit underlying assumptions of the models. MCS bypasses these disadvantages by running a large number of simulations and averaging out the results. The technique enables easy computation of a fair value for derivatives. It also captures randomness and path dependencies in market moves, which are essential to deal with complicated financial instruments.</p>
+</section>
 </section>
 <section id="price-comparison-of-european-vs.-asian-call-option" class="level2">
 <h2 class="anchored" data-anchor-id="price-comparison-of-european-vs.-asian-call-option">1.2: Price Comparison of European vs.&nbsp;Asian Call Option</h2>
