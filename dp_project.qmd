@@ -26,6 +26,25 @@ r = 0.04  # Risk-free rate
 
 # Question 1: Pricing
 ## 1.1: Option Pricing Using MCS
+
+### Pricing Options
+An option is a financial derivative, essentially a contract that gives the buyer the right, but not the obligation, to sell or buy an asset at a pre-determined price on or before a specific date. Generally, there are two classes of options: calls, which give the buyer the right to purchase, and puts, which give the buyer the right to sell.
+
+Factors such as the price and volatility of the underlying asset, the time until the contract expiration, the strike price of the option, and the risk-free interest rate influence the value of an option. These factors are utilized in option pricing models to determine the theoretical option price. 
+
+### Geometric Asian Call Options
+There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is computed as the maximum of the difference between the geometric average price of the underlying asset and the strike price or 
+There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is determined by the geometric average of the price of the underlying asset ($A_{t}$). The payoff of the option will be positive if the average exceeds the strike price ($K$), or will be 0 otherwise. The payof ($\psi_{T}$) at expiry ($T$) can be expressed as: 
+$$\psi_{T}=(A_{t}-K)^{+}$$
+
+### Monte Carlo Simulations
+Monte Carlo simulations (MCS) are versatile computational techniques used in estimating the outcomes of several random variables. In MCS, a large number (noted as $n$) of scenarios are drawn from specified probability distributions.
+
+The principle of MCS is based on the law of large numbers, assuming that the average results obtained from a large number of trials should approximate the expected value of the random variable being simulated. The approachis quite powerful for the investigation and quantification of the intrinsic uncertainty of systems and processes through multiple scenario modeling and observation of resulting outcomes.
+
+### MCS in Pricing Derivatives
+MCS becomes particularly useful in prices of financial derivatives, which can be complicated due to various parameters, variables, and sources of uncertainty. Traditional pricing models can have limitiations in their fit with the wide range of derivatives due to the explicit underlying assumptions of the models. MCS bypasses these disadvantages by running a large number of simulations and averaging out the results. The technique enables easy computation of a fair value for derivatives. It also captures randomness and path dependencies in market moves, which are essential to deal with complicated financial instruments.
+
 ```{python}
 #| echo: false
 # Define Parameters
@@ -46,24 +65,18 @@ path_avgs = np.exp(np.mean(np.log(S_paths), axis=1)) # compute geom. avg.
 psi_asian = np.maximum(path_avgs-K,0) # compute payoffs
 p_asian = np.exp(-r*T) * np.mean(psi_asian) # compute price of the asian option
 ```
-### Pricing Options
-An option is a financial derivative, essentially a contract that gives the buyer the right, but not the obligation, to sell or buy an asset at a pre-determined price on or before a specific date. Generally, there are two classes of options: calls, which give the buyer the right to purchase, and puts, which give the buyer the right to sell.
 
-Factors such as the price and volatility of the underlying asset, the time until the contract expiration, the strike price of the option, and the risk-free interest rate influence the value of an option. These factors are utilized in option pricing models to determine the theoretical option price. 
+### Computing the Price of the Asian Call
+As a basis for the simulation, it is assumed that the price of the underlying asset follows a discretized form of a Geometric Brownian Motian (GBM), defined for the geometric Asian call as:
+$$S_{t}=S_{t-1}\exp(-\frac{1}{2}\sigma^2\delta+\sigma \sqrt{\delta}Z)$$
 
-### Geometric Asian Call Options
-There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is computed as the maximum of the difference between the geometric average price of the underlying asset and the strike price or 
-There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is determined by the geometric average of the price of the underlying asset ($A_{t}$). The payoff of the option will be positive if the average exceeds the strike price, or will be 0 otherwise. The payoff at expiry ($\psi_{T}$) can be expressed as: 
-$$\psi_{T}=(A_{t}-K)^{+}, $$where the geometric average price ($A_{t}$) is determined as, $$ A_{t}=\sqrt[m]{\prod^{m}_{i=1}{S_{T_{i}}}}$$
+Where $Z$ is a random sample drawn from the standard normal distribution ($Z \sim N(0,1)$), $\sigma$ is the volatility of the underlying and $\delta$ is the length of time steps, defined as $\delta := T/m$ where $m$ is the number of time steps and $T$ is time of expiry. Furthermore, as a method for computing the geometric average of the simulated prices at expiry is needed. It was opted to do this by the following expression:
+$$A_{T}=\exp({\frac{1}{m} \sum^{m}_{i=1}{\ln(S_{i})}})$$ 
 
-### Monte Carlo Simulations
-Monte Carlo simulations (MCS) are versatile computational techniques used in estimating the outcomes of several random variables. In MCS, a large number of scenarios are drawn from specified probability distributions.
+Equiped with the $A_{t}$`s, the payoff of each simulated path is obtainable. To obtain the price of the Asian call, the average of the simulated payoffs discounted to the present value, utilizing the expression: 
+$$P^{CALL}_{Asian} = \frac{1}{n}\sum^{n}_{j=1}{\psi_{j}}\exp(-rT)$$ 
 
-The principle of MCS is based on the law of large numbers, assuming that the average results obtained from a large number of trials should approximate the expected value of the random variable being simulated. The approachis quite powerful for the investigation and quantification of the intrinsic uncertainty of systems and processes through multiple scenario modeling and observation of resulting outcomes.
-
-### MCS in Pricing Derivatives
-MCS becomes particularly useful in prices of financial derivatives, which can be complicated due to various parameters, variables, and sources of uncertainty. Traditional pricing models can have limitiations in their fit with the wide range of derivatives due to the explicit underlying assumptions of the models. MCS bypasses these disadvantages by running a large number of simulations and averaging out the results. The technique enables easy computation of a fair value for derivatives. It also captures randomness and path dependencies in market moves, which are essential to deal with complicated financial instruments.
-
+Inputting the pre-defined parameters, the price of the geometric Asian option was computed to be: $`{python} round(p_asian, 2)`.
 
 ## 1.2: Price Comparison of European vs. Asian Call Option
 ```{python}
