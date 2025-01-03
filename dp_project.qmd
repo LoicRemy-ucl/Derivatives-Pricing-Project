@@ -21,6 +21,7 @@ T = 1  # Time to maturity in years
 m = 12  # Number of fixing dates
 sigma = 0.3  # Volatility
 r = 0.04  # Risk-free rate
+discount = np.exp(-r*T)
 ```
 
 
@@ -35,7 +36,7 @@ Factors such as the price and volatility of the underlying asset, the time until
 ### Geometric Asian Call Options
 There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is computed as the maximum of the difference between the geometric average price of the underlying asset and the strike price or 
 There are several different types of options. Geometric Asian call options is a type of option where the price is dependent on the path of the underlying asset. Essentially, this implies that the payoff of the option depends on the price path of the underlying asset during the lifetime of the option. For geometric Asian call options, the payoff at the time of expiry ($\psi_{T}$) is determined by the geometric average of the price of the underlying asset ($A_{t}$). The payoff of the option will be positive if the average exceeds the strike price ($K$), or will be 0 otherwise. The payof ($\psi_{T}$) at expiry ($T$) can be expressed as: 
-$$\psi_{T}=(A_{t}-K)^{+}$$
+$$\psi^{Asian}_{T}=(A_{T}-K)^{+}$$
 
 ### Monte Carlo Simulations
 Monte Carlo simulations (MCS) are versatile computational techniques used in estimating the outcomes of several random variables. In MCS, a large number (noted as $n$) of scenarios are drawn from specified probability distributions.
@@ -62,8 +63,14 @@ for i in range(1, (m+1)): # iterativly simulate n asset price paths over m perio
 
 ## Geometric Asian Option
 path_avgs = np.exp(np.mean(np.log(S_paths), axis=1)) # compute geom. avg. 
-psi_asian = np.maximum(path_avgs-K,0) # compute payoffs
-p_asian = np.exp(-r*T) * np.mean(psi_asian) # compute price of the asian option
+def payoff(underlying):
+    """function computing the payoffs of an option"""
+    return np.maximum(underlying-K,0)
+def price_option(payoffs):
+    """function computing the price of an option"""
+    return discount * np.mean(payoffs)
+psi_asian = payoff(path_avgs) # compute payoffs
+p_asian = price_option(psi_asian) # compute price of the asian option
 ```
 
 ### Computing the Price of the Asian Call
@@ -74,7 +81,7 @@ Where $Z$ is a random sample drawn from the standard normal distribution ($Z \si
 $$A_{T}=\exp({\frac{1}{m} \sum^{m}_{i=1}{\ln(S_{i})}})$$ 
 
 Equiped with the $A_{t}$`s, the payoff of each simulated path is obtainable. To obtain the price of the Asian call, the average of the simulated payoffs discounted to the present value, utilizing the expression: 
-$$P^{CALL}_{Asian} = \frac{1}{n}\sum^{n}_{j=1}{\psi_{j}}\exp(-rT)$$ 
+$$P^{CALL} = \frac{1}{n}\sum^{n}_{j=1}{\psi_{j}}\exp(-rT)$$ 
 
 Inputting the pre-defined parameters, the price of the geometric Asian option was computed to be: $`{python} round(p_asian, 2)`.
 
@@ -85,16 +92,87 @@ Inputting the pre-defined parameters, the price of the geometric Asian option wa
 np.random.seed(42) # to ensure reproduceability
 Z = np.random.standard_normal(n) 
 path_terminal = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z) # terminal prices
-psi_euro = np.maximum(path_terminal-K,0) # compute payoffs
-p_euro = np.exp(-r*T) * np.mean(psi_euro)
+psi_euro = payoff(path_terminal) # compute payoffs
+p_euro = price_option(psi_euro)
 ```
 
-```
-This is the price of the European option: `{python} p_euro`
-```
+### Computing the Price of an European Call
+An alternative derivative of the same underlying asset (Chevron stock) could be a European Call option. It differes from the Asian call that was priced previously as it its price is not path dependent. This simplifies the computation, as we are only interested in simulating the $n$ terminal prices of the stock. Continueing with the assumtion that the stock follows a GBM, the stock price at expiry ($S_{T}$) was computed with the following expression:
+$$S_{T}=S_{0}\exp((r-\frac{\sigma^2}{2})T+\sigma \sqrt{T} Z$$    
+
+The price of the European call is computed using the same expression as the Asian one, but the payoff expression differs in that the geometric average of the price of the underlying at expiry ($A_{T}$) is replaced by the terminal stock price ($S_{T}$). For extensiveness: 
+$$\psi^{Euro}_{T}=(S_{T}-K)^{+}$$ 
+
+The price of the European style option to purchase 1 stock of Chrevron in 1 year for $150 is computed to be: $`{python} round(p_euro, 2)`. 
+
+### Comments on Observed Differences in Option Prices
+There is a significant difference in the prices of the two calles despite having the same underlying stock. The prices of a European call and a geometric Asian call with the same underlying asset will likely differ due to how the payoffs are computed and the influence of volatility on the option prices.
+
+The payoff of the European call option is based on the price of the underlying on the date of expiration. In this case, if the price of the asset at this time is greater than the strike price, the payoff is the difference between the market price and the strike price, otherwise zero. This makes the European call highly sensitive to the asset's volatility. With higher volatility, there is an increased probability that the price of the asset might be greater than the strike price at maturity, thus increasing the value of the option.
+
+On the other hand, the payoff of a geometric Asian call option depends on the geometric average of the asset price at pre-defined moments during the option life. This type of averaging process reduces the price volatility  close to the expiration date. Therefore, the volatility to which the option is exposed would generally be lower. Geometric Asian calls are normally cheaper than their European counterparts because the average price is less likely to deviate far from the strike compared to a single point measurement. Averaging makes the geometric Asian option less risky but also tends to be less profitable in high volatility scenarios of the underlying.
+
 ## 1.3: Pricing of Options with Barriers
+Barrier options differes from the ones that has been prevosily discussed with the additon of a barrier. This effect of this barrier is that when the price of the underlying asset crosses this barrier, it will either activate/deactivate the option depending on its type. In the following, two such options will be priced.
+
 ### i. "Up-In" Barrier
+```{python}
+#| echo: false
+# Compute the price of a geometric Asian "up-in" barrier option  
+Barrier = 225
+def price_barrier(type, bar):
+    "function computing the price of either an 'ui' or 'uo' option"
+    max_prices = np.max(S_paths, axis=1)
+    if (type == "ui"):
+        psi = np.where(max_prices > bar, psi_asian, 0)
+    elif (type == "uo"):
+        psi = np.where(max_prices <= bar, psi_asian, 0)
+    else:
+        print("Input error. Only valid for type 'ui'/'uo'!")
+    return price_option(psi)
+p_ui = price_barrier("ui", Barrier)
+```
+
+So-called "up-in" barrier options are "in" the money when the price of the underlying asset exeeds the barrier price of the option. Once the barrier is crossed, the option becomes active and behaves as "standard" options. If the barrier is not breached at expiry, the option is worthless. Compared to "standard" options, this condition of the underlying exeeding the barrier reduces the liklyhood of the option to be "in-the-money". As a result, the price of such options are typically lower compared to vanilla options.  
+
+To determine the price of the "up-in" barrier option, the same paths obtained from the MCS of the asset price movements of the Chevron stock used to price the Asian call and the computed payoffs of the paths was utilized. However, an additional condition on the payoff was added, to ensure that any path could only have a positive payoff if at any time the option became active. The price obtained was: $`{python} round(p_ui,2)`. 
+
 ### ii. "Up-Out" Barrier
+```{python}
+#| echo: false
+# Compute the price of a geometric Asian "up-out" barrier option  
+p_uo = price_barrier("uo", Barrier)
+```
+Differing from the "up-in" barrier option, the "up-out" is "out-of-the-money" if the price of the underlying exeeds the barrier before the expiry of the option. 
+
+The procedure to compute the price of the "up-out" option is mostly the same as for the "up-in". The only real difference is that the condition for the option to be active and then behave as a vanilla call is that the price of the underlying exceeds the barrier, the option becomes inactive. The computed price of the option was: $`{python} round(p_uo,2)`.
+
+### Impact of K'on the Price of Barrier Options
+
+```{python}
+#| echo: false
+#| label: fig-barrier-compare
+#| fig-cap: "Barrier Option Prices vs. Barrier Levels"
+#| fig-pos: 'H'
+# Compute prices of barriers with varying K'
+barriers = list(range(150, 301, 25))
+ui_prices = []
+uo_prices = []
+for i in barriers:
+    ui_prices.append(price_barrier("ui", i))
+    uo_prices.append(price_barrier("uo", i))
+# plot results
+plt.figure(figsize=(12, 6))  # Set the size of the plot
+plt.plot(barriers, ui_prices, marker='o', linestyle='-', color='blue', label='UI Prices')  # Up-in prices
+plt.plot(barriers, uo_prices, marker='x', linestyle='--', color='red', label='UO Prices')  # Up-out prices
+plt.title('Barrier Option Prices vs. Barrier Levels')
+plt.xlabel('Barrier Level (K\')')  # X-axis label
+plt.ylabel('Option Price')  # Y-axis label
+plt.legend()  # Add a legend to identify the lines
+plt.grid(True)  # Add a grid for easier visualization of values
+plt.show()
+```  
+@fig-barrier-compare illustrates how the prices for a Up-In (UI) and Up-Out (UO) barrier options vary with different barrier ($K'$) levels. The UI option prices decrease with the increase in barrier level since the chances of breaching of barrier diminish. Conversely, the UO option prices increase along with the barrier level because the premiums are higher as a result of lower probability in breaching this barrier. 
 
 # Question 2: Analytical Pricing
 ## 2.1: Analytical Option Pricing
@@ -108,6 +186,6 @@ This is the price of the European option: `{python} p_euro`
 ### i. "Up-In" Barrier
 ### ii. "Up-Out" Barrier
 
- # Question 3: Replication
+# Question 3: Replication
 ## 3.1: Replication Strategy
 ## 3.2: Assessing Impact of the Rebalancing Errors
