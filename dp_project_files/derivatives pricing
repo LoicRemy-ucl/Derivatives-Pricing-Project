@@ -1,0 +1,96 @@
+# Question 2: Analytical Pricing
+## 2.1: Analytical Option Pricing
+### i. Formulas and reasoning
+
+The analytical price of a Geometric Asian Call Option is derived from the fact that the payoff depends on the geometric average of the underlying prices across m fixing dates. This price can be expressed using a modified version of the Black-Scholes formula.
+
+The price $V_t$ at time $t$ for a Geometric Asian Call Option is given by:
+
+$$
+V_t = X_t \cdot \text{BSM}(T - t, S_t, \sigma A(t), K / X_t)
+$$
+
+Here, $X_t$ is the scaling factor incorporating past fixings and drift and $\text{BSM}(\tau, S, \sigma, K)$ is the Black-Scholes price for a European call option with time-to-maturity $\tau$, spot price $S$, volatility $sigma$, and strike $K$.
+
+The scaling factor $X_t$ in the pricing formula of a Geometric Asian Option adjusts the strike price and relates the option to a modified underlying process. 
+
+$$
+X_t = Y_t \cdot \exp(\mu_A(t) \cdot (T-t))
+$$
+
+Where : 
+
+- $Y_t$ represents the past fixings (prices already observed) relative to the current price $S_t$
+- $\exp(\mu_A(t)(T-t))$ captures the effect of the drift and forward-looking expectations based on remaining time $T-t$.
+
+The term $Y_t$ accounts for the geometric average of past fixings, ensuring that the option price reflects the observed path of the underlying asset up to time t. It is defined as : 
+$$
+Y_t = \exp\left( \frac{1}{i(t) - 1} \sum_{j=1}^{i(t)-1} \ln\left( \frac{S_{T_j}}{S_t} \right) \right)
+$$
+
+Where :
+
+- $i(t)$ isthe number of fixings already observed by time t
+- $S_{T_j}$ is the underlying asset's price at fixing date $T_j$
+- $S_t$ is the current underlying price
+
+The second component of the scaling factor $X_t$, $\exp(\mu_A(t)\cdot(T-t))$ adjusts for the expected drift of the geometric average during the remaining time to maturity $T-t$. The drift term $\mu_A(t)$ is defined as : 
+
+$$
+\mu_A(t)(T - t) = \left( r - \frac{\sigma^2}{2} \right) \frac{\delta}{m} 
+\left[ 
+(m - i(t) + 1) \alpha(t) + \frac{(m - i(t))(m - i(t) + 1)}{2} 
+\right] 
+- \left( r - \frac{\sigma_A^2(t)}{2} \right)(T - t)
+$$
+
+- The first term represents the contribution of the remaining fixings to the drift
+- The second term accounts for the adjustment due to the reduced volatility of the geometric average
+
+Now let's focus on the BSM formula for pricing options which is modified for Geometric Asian options due to the averaging process and adjusted volatility $\sigma_A$.
+
+$$
+\text{BSM}(T - t, S_t, \sigma_A(t), K) = S_t \cdot \Phi(d_1) - K \cdot e^{-r(T - t)} \cdot \Phi(d_2)
+$$
+
+Where : 
+
+$$
+d_1 = \frac{\ln(S_t / K) + \left(r + \frac{\sigma_A^2(t)}{2}\right)(T - t)}{\sigma_A(t) \sqrt{T - t}}
+$$
+
+$$
+d_2 = d_1 - \sigma_A(t) \sqrt{T - t}
+$$
+
+The intuition behind the BSM formula is that on one hand $S_T\cdot\phi(d_1)$ represents the "expected" benefit of holding the option, weighted by the likelihood that the option expires in-the-money. On the other hand, $K\cdot\exp(-r(T-t))\cdot\phi(d_2)$ represents the present value of paying the strike price K, adjusted by the probability of exercising the option.
+
+In our case, by using the geometric asian options, the key modificiation of the BSM formula lies in using $sigma_A(t)$ instead of the standard volatility $\sigma$.
+
+The effective volatility $\sigma_A(t)$ captures the reduced variance due to averaging in the geometric asian option. It is a function of the remaining time $T-t$, the number of fixings $m$ and the volatility $\sigma$.
+
+$$
+\sigma_A(t) \sqrt{T - t} = \frac{\sigma \sqrt{\delta}}{\sqrt{m}} \cdot 
+\sqrt{(m - i(t) + 1)\alpha(t) + \frac{(m - i(t))(2(m - i(t)) + 1)}{6(m - i(t) + 1)}}
+$$
+
+Where:
+
+- $\delta = T/m$: Time interval between fixings.
+- $i(t)$: Number of past fixings at time $t$.
+- $\alpha(t) = \frac{T_{i(t)} - t}{\delta}$: Fraction of time remaining until the next fixing relative to $ \delta $.
+- $\sigma$: Volatility of the underlying asset.
+
+With this formula, we observe that : 
+
+- The volatility is scaled due to the factor $\sigma\sqrt(\delta)/m$ which smoothens the fluctuations and so reduce the overall volatility.
+- The remaining fixings contribute a lot to the result of the adjusted volatility as it reflecect the variance contribution of the next fixing and account for the variance from all the remaining fixings, weighted by their respective contributions.
+- Finally, the overall efective volatility $\sigma_A(t)\sqrt(T-t)$ decreases as $t$ approaches $T$, because fewer fixings remain, reducing uncertainty.
+
+### ii. Results
+
+Using the analytical pricing approach implemented in the code, the analytical price of the Geometric Asian Call Option at $t=0$ is found to be approximately $11.70.
+
+This result demonstrates the theoretical value of the option under the given default parameters $(S_0 = 150, K = 150, \sigma = 0.3, T = 1, r = 0.04, m = 12). The analytical method provides a precise result that serves as a benchmark for comparison with other pricing techniques, such as Monte Carlo simulations which has been executed in the question 1. 
+
+We will now examine whether the Monte Carlo simulation for the price of the Geometric Asian Call Option converges to the analytical price of $11.70$. This analysis will be conducted for $t = 0$ and $t = 0.75$ to confirm that, at any time $t$, the Monte Carlo method consistently converges to the analytical price, reinforcing its reliability across different time points.
